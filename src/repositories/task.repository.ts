@@ -210,6 +210,7 @@ export class TaskRepository {
         description: data.description,
         status: data.status,
         priority: data.priority,
+        actualCost: data.actualCost ?? 0,
         dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
         assigneeIds: data.assigneeIds || [],
         projectId: projectId,

@@ -10,6 +10,7 @@ export interface CreateTaskInput {
   assigneeIds?: string[]; // Added this line
   estimatedHours?: number;
   estimatedCost?: number;
+  actualCost?: number;
   tags?: string[];
 }
 

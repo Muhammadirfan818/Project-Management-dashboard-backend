@@ -106,4 +106,59 @@ export class TeamController {
       next(error);
     }
   }
+
+  async getTeamMemberStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const stats = await teamService.getTeamMemberStats(id);
+      sendSuccess(res, stats);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getTeamOverviewStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      // Extract projectId from query string
+      const projectId = req.query.projectId as string | undefined;
+
+      const stats = await teamService.getTeamOverviewStats(id, projectId);
+      sendSuccess(res, stats);
+    } catch (error: unknown) {
+      next(error);
+    }
+  }
+
+  async getTopEarningProjects(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const { range } = req.query; // 'this_month', 'last_month', etc.
+
+      const data = await teamService.getTopEarningProjects(id, range as string);
+      sendSuccess(res, data);
+    } catch (error: unknown) {
+      next(error);
+    }
+  }
+
+  async getYearlyIncomeOverview(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { id } = req.params;
+      const { year } = req.query;
+
+      const parsedYear = year
+        ? parseInt(year as string)
+        : new Date().getFullYear();
+
+      const data = await teamService.getYearlyIncomeOverview(id, parsedYear);
+      sendSuccess(res, data);
+    } catch (error: unknown) {
+      next(error);
+    }
+  }
 }

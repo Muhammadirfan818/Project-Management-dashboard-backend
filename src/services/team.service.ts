@@ -58,4 +58,19 @@ export class TeamService {
   async syncProjectTeamRelationships() {
     return this.teamRepository.syncProjectTeamRelationships();
   }
+
+  async getTeamOverviewStats(teamId: string, projectId?: string) {
+    return this.teamRepository.getTeamOverviewStats(teamId, projectId);
+  }
+
+  async getTeamMemberStats(teamId: string) {
+    return this.teamRepository.getTeamMemberStats(teamId);
+  }
+  async getTopEarningProjects(teamId: string, range?: string) {
+    return this.teamRepository.getTopEarningProjects(teamId, range);
+  }
+
+  async getYearlyIncomeOverview(teamId: string, year: number) {
+    return this.teamRepository.getYearlyIncomeOverview(teamId, year);
+  }
 }

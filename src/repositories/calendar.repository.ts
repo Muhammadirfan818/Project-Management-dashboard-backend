@@ -22,6 +22,17 @@ export class CalendarRepository {
     });
   }
 
+  async findByProjectIds(projectIds: string[]) {
+    return prisma.calendarEvent.findMany({
+      where: {
+        projectId: {
+          in: projectIds,
+        },
+      },
+      orderBy: { start: "asc" },
+    });
+  }
+
   // Get events within a date range (for calendar month/week view)
   async findByDateRange(projectId: string, startDate: Date, endDate: Date) {
     return prisma.calendarEvent.findMany({

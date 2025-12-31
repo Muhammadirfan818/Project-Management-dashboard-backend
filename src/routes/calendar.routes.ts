@@ -8,6 +8,7 @@ const controller = new CalendarController();
 router.use(authenticate);
 
 router.post("/", controller.createEvent);
+router.get("/", controller.getAllEvents);
 router.get("/project/:projectId", controller.getProjectEvents);
 router.get("/project/:projectId/range", controller.getEventsByDateRange);
 router.get("/project/:projectId/today", controller.getTodayEvents);

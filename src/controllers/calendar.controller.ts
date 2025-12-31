@@ -1,8 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { CalendarService } from "../services/calendar.service";
+import { ProjectService } from "../services/project.service";
+import { UserService } from "../services/user.service";
 import { sendSuccess } from "../utils/response";
 
 const calendarService = new CalendarService();
+const projectService = new ProjectService();
+const userService = new UserService();
 
 export class CalendarController {
   async createEvent(req: Request, res: Response, next: NextFunction) {
@@ -13,11 +17,27 @@ export class CalendarController {
       next(error);
     }
   }
-
   async getProjectEvents(req: Request, res: Response, next: NextFunction) {
     try {
       const { projectId } = req.params;
       const events = await calendarService.getProjectEvents(projectId);
+      sendSuccess(res, events);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Get ALL events for the authenticated user (Dashboard "All Projects" view)
+  async getAllEvents(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { sub: supabaseId } = req.user!;
+      const user = await userService.getUserBySupabaseId(supabaseId);
+
+      // Get all projects the user is a member of
+      const projects = await projectService.getUserProjects(user.id);
+      const projectIds = projects.map((p) => p.id);
+
+      const events = await calendarService.getEventsForProjects(projectIds);
       sendSuccess(res, events);
     } catch (error) {
       next(error);
@@ -31,11 +51,9 @@ export class CalendarController {
       const { startDate, endDate } = req.query;
 
       if (!startDate || !endDate) {
-        return res
-          .status(400)
-          .json({
-            message: "startDate and endDate query parameters are required",
-          });
+        return res.status(400).json({
+          message: "startDate and endDate query parameters are required",
+        });
       }
 
       const events = await calendarService.getEventsByDateRange(

@@ -27,6 +27,10 @@ export class CalendarService {
     return this.calendarRepository.findByProjectId(projectId);
   }
 
+  async getEventsForProjects(projectIds: string[]) {
+    return this.calendarRepository.findByProjectIds(projectIds);
+  }
+
   // Get events for a specific date range (calendar month/week view)
   async getEventsByDateRange(
     projectId: string,

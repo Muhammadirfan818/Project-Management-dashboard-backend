@@ -11,14 +11,6 @@ export class ProjectRepository {
     const teamIds = userTeams.map((t) => t.id);
 
     return prisma.project.findMany({
-      // REMOVED visibility filters to allow ALL projects to be seen
-      // where: {
-      //   OR: [
-      //     { ownerId: userId },
-      //     { members: { some: { id: userId } } },
-      //     { teamIds: { hasSome: teamIds } },
-      //   ],
-      // },
       include: {
         owner: {
           select: {
@@ -40,7 +32,7 @@ export class ProjectRepository {
           select: {
             id: true,
             name: true,
-            memberIds: true, // Needed for progress calculation
+            memberIds: true,
             status: true,
             priority: true,
             startDate: true,
@@ -78,7 +70,7 @@ export class ProjectRepository {
           select: {
             id: true,
             name: true,
-            memberIds: true, // Needed for progress calculation
+            memberIds: true,
             status: true,
             priority: true,
             startDate: true,
@@ -122,7 +114,7 @@ export class ProjectRepository {
           select: {
             id: true,
             name: true,
-            memberIds: true, // Needed for progress calculation
+            memberIds: true,
             status: true,
             priority: true,
             startDate: true,
@@ -147,7 +139,6 @@ export class ProjectRepository {
   }
 
   async create(data: CreateProjectInput, ownerId: string) {
-    // Generate a simple key from the name + random number
     const prefix = data.name
       ? data.name
           .replace(/[^a-zA-Z0-9]/g, "")
@@ -156,10 +147,8 @@ export class ProjectRepository {
       : "PRJ";
     const key = `${prefix}-${Date.now().toString(36).toUpperCase()}`;
 
-    // Extract teamIds from data
     const { teamIds, ...restData } = data;
 
-    // Create project with teamIds
     const project = await prisma.project.create({
       data: {
         ...restData,
@@ -169,7 +158,6 @@ export class ProjectRepository {
       },
     });
 
-    // If teams were specified, update each team to include this project in their projectIds
     if (teamIds && teamIds.length > 0) {
       for (const teamId of teamIds) {
         await prisma.team.update({
@@ -203,24 +191,17 @@ export class ProjectRepository {
   }
 
   async delete(projectId: string) {
-    // Manually delete related targets to bypass foreign key constraints if cascade fails
-    // 1. Delete tasks (Prisma should cascade to subtasks, comments, etc. if schema is correct,
-    //    but explicitly deleting tasks removes the ProjectToTask constraint check on the project)
     await prisma.task.deleteMany({
       where: { projectId },
     });
 
-    // 2. Delete snapshots
     await prisma.projectSnapshot.deleteMany({
       where: { projectId },
     });
-
-    // 3. Delete calendar events
     await prisma.calendarEvent.deleteMany({
       where: { projectId },
     });
 
-    // 4. Delete budget
     await prisma.budget.deleteMany({
       where: { projectId },
     });
@@ -230,8 +211,6 @@ export class ProjectRepository {
     });
   }
   async findAttachments(projectId: string) {
-    // Single optimized query: Get attachments directly through task relation
-    // This avoids the need for two separate queries
     const attachments = await prisma.attachment.findMany({
       where: {
         task: {
@@ -247,7 +226,6 @@ export class ProjectRepository {
         mimeType: true,
         createdAt: true,
         taskId: true,
-        // Include actual uploader (attachment's user) with ID for team filtering
         user: {
           select: {
             id: true,
@@ -270,18 +248,12 @@ export class ProjectRepository {
     return attachments;
   }
 
-  /**
-   * Helper method to enrich projects with calculated team progress
-   * Instead of using static team.progress, calculates based on assigned tasks
-   */
   async enrichProjectsWithTeamProgress<
     TTeam extends { memberIds: string[]; progress?: number | null },
     TProject extends { id: string; teams: TTeam[] }
   >(projects: TProject[]): Promise<TProject[]> {
-    // Get all project IDs
     const projectIds = projects.map((p) => p.id);
 
-    // Fetch all tasks for all projects at once (efficient single query)
     const allTasks = await prisma.task.findMany({
       where: {
         projectId: { in: projectIds },
@@ -294,7 +266,6 @@ export class ProjectRepository {
       },
     });
 
-    // Group tasks by project ID
     const tasksByProject: Record<string, typeof allTasks> = {};
     allTasks.forEach((task) => {
       if (!tasksByProject[task.projectId]) {
@@ -303,7 +274,6 @@ export class ProjectRepository {
       tasksByProject[task.projectId].push(task);
     });
 
-    // Enrich each project's teams with calculated progress
     return projects.map((project) => ({
       ...project,
       teams: project.teams.map((team) => {
@@ -311,7 +281,7 @@ export class ProjectRepository {
         const progress = calculateTeamProgress(projectTasks, team.memberIds);
         return {
           ...team,
-          progress, // Override static progress with calculated value
+          progress,
         };
       }),
     }));

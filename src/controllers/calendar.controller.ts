@@ -27,13 +27,10 @@ export class CalendarController {
     }
   }
 
-  // Get ALL events for the authenticated user (Dashboard "All Projects" view)
   async getAllEvents(req: Request, res: Response, next: NextFunction) {
     try {
       const { sub: supabaseId } = req.user!;
       const user = await userService.getUserBySupabaseId(supabaseId);
-
-      // Get all projects the user is a member of
       const projects = await projectService.getUserProjects(user.id);
       const projectIds = projects.map((p) => p.id);
 
@@ -44,7 +41,6 @@ export class CalendarController {
     }
   }
 
-  // Get events by date range for calendar view
   async getEventsByDateRange(req: Request, res: Response, next: NextFunction) {
     try {
       const { projectId } = req.params;
@@ -67,7 +63,6 @@ export class CalendarController {
     }
   }
 
-  // Get today's events for timeline
   async getTodayEvents(req: Request, res: Response, next: NextFunction) {
     try {
       const { projectId } = req.params;
@@ -78,7 +73,6 @@ export class CalendarController {
     }
   }
 
-  // Get a single event by ID
   async getEvent(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;

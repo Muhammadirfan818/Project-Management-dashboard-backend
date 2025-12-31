@@ -11,18 +11,6 @@ export class AttachmentController {
     try {
       const { taskId, name, url, size, mimeType } = req.body;
       const { sub: supabaseId } = req.user!;
-
-      // Need to find user by Supabase ID to get DB ID
-      // Importing locally or dependency injection would be better, but for now:
-      // We need Access to UserService.
-      // Ideally Controller should depend on Service which depends on Repo.
-      // But UserService is needed here.
-
-      // Let's rely on UserService being available.
-      // import { UserService } from "../services/user.service";
-      // const userService = new UserService();
-      // But imports in middle of file are bad. I will add import at top in next step.
-
       const user = await userService.getUserBySupabaseId(supabaseId);
 
       const attachment = await attachmentService.createAttachment({

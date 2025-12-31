@@ -23,11 +23,9 @@ export function errorMiddleware(
     });
   }
 
-  // Handle all Prisma errors with user-friendly messages
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     let message = "Database operation failed";
 
-    // Handle specific error codes
     switch (err.code) {
       case "P2002":
         message = "A record with this value already exists";
@@ -48,7 +46,6 @@ export function errorMiddleware(
     });
   }
 
-  // Handle Prisma validation errors (unknown fields, wrong types, etc.)
   if (err instanceof Prisma.PrismaClientValidationError) {
     return res.status(400).json({
       status: "error",
@@ -56,7 +53,6 @@ export function errorMiddleware(
     });
   }
 
-  // Handle other Prisma errors
   if (err.name?.includes("Prisma")) {
     return res.status(400).json({
       status: "error",
@@ -64,8 +60,6 @@ export function errorMiddleware(
     });
   }
 
-  // Return actual error message for known Error instances
-  // Only hide message for truly unexpected errors
   return res.status(400).json({
     status: "error",
     message: err.message || "An unexpected error occurred",

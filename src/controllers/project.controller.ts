@@ -15,8 +15,6 @@ export class ProjectController {
         const projects = await projectService.getUserProjects(user.id);
         return sendSuccess(res, projects);
       } catch (err) {
-        // If user not found and we're in development, return all projects as a
-        // developer-friendly fallback so the UI can show existing projects.
         if (process.env.NODE_ENV === "development") {
           const projects = await projectService.getAllProjects();
           return sendSuccess(res, projects);
@@ -45,19 +43,17 @@ export class ProjectController {
       const { sub: supabaseId } = req.user!;
       const user = await userService.getUserBySupabaseId(supabaseId);
 
-      // Extract and sanitize input
       const { name, description, dueDate, startDate, teamId, icon, color } =
         req.body;
 
-      // Map definitions to match CreateProjectInput
       const payload = {
         name,
         description,
         icon,
         color,
         startDate: startDate ? new Date(startDate) : undefined,
-        endDate: dueDate ? new Date(dueDate) : undefined, // Map dueDate -> endDate
-        teamIds: teamId ? [teamId] : [], // Map teamId -> teamIds array
+        endDate: dueDate ? new Date(dueDate) : undefined,
+        teamIds: teamId ? [teamId] : [],
       };
 
       const project = await projectService.createProject(payload, user.id);
@@ -108,7 +104,6 @@ export class ProjectController {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
 
-      // Return detailed error for debugging
       res.status(400).json({
         status: "error",
         message: errorMessage,

@@ -9,7 +9,6 @@ export class UserService {
     this.userRepository = new UserRepository();
   }
 
-  // Find user by Supabase ID or create if not exists
   async findOrCreateUser(
     supabaseId: string,
     email: string,
@@ -19,13 +18,11 @@ export class UserService {
     let user = await this.userRepository.findUnique({ supabaseId });
 
     if (!user) {
-      // Check if user exists by email (to avoid unique constraint violation on email)
       const existingUserByEmail = await this.userRepository.findUnique({
         email,
       });
 
       if (existingUserByEmail) {
-        // User exists but Supabase ID doesn't match/exist. Link the account.
         user = await this.userRepository.updateById(existingUserByEmail.id, {
           supabaseId,
           name: name || undefined,
@@ -44,7 +41,6 @@ export class UserService {
     return user;
   }
 
-  // Get user by Supabase ID
   async getUserBySupabaseId(supabaseId: string) {
     const user = await this.userRepository.findUnique({ supabaseId });
     if (!user) {
@@ -53,12 +49,9 @@ export class UserService {
     return user;
   }
 
-  // Get all users
   async getAllUsers() {
     return this.userRepository.findAll();
   }
-
-  // Update existing user
   async updateUser(supabaseId: string, data: UpdateUserInput) {
     const user = await this.userRepository.findUnique({ supabaseId });
     if (!user) {
@@ -67,12 +60,22 @@ export class UserService {
     return this.userRepository.update(supabaseId, data);
   }
 
-  // Delete user
   async deleteUser(supabaseId: string) {
     const user = await this.userRepository.findUnique({ supabaseId });
     if (!user) {
       throw new AppError("User not found", 404);
     }
     await this.userRepository.delete(supabaseId);
+
+    const { supabaseAdmin } = await import("../lib/supabase");
+    if (supabaseAdmin) {
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(supabaseId);
+      if (error) {
+        console.error(
+          `Failed to delete user ${supabaseId} from Supabase Auth:`,
+          error
+        );
+      }
+    }
   }
 }

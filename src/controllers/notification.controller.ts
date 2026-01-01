@@ -1,15 +1,19 @@
 import { Request, Response, NextFunction } from "express";
 import { NotificationService } from "../services/notification.service";
+import { UserService } from "../services/user.service";
 import { sendSuccess } from "../utils/response";
 
 const notificationService = new NotificationService();
+const userService = new UserService();
 
 export class NotificationController {
   async getUserNotifications(req: Request, res: Response, next: NextFunction) {
     try {
-      const { sub: userId } = req.user!;
+      const { sub: supabaseId } = req.user!;
+      // Get database user ID from supabaseId
+      const user = await userService.getUserBySupabaseId(supabaseId);
       const notifications = await notificationService.getUserNotifications(
-        userId
+        user.id
       );
       sendSuccess(res, notifications);
     } catch (error) {
@@ -29,8 +33,10 @@ export class NotificationController {
 
   async markAllAsRead(req: Request, res: Response, next: NextFunction) {
     try {
-      const { sub: userId } = req.user!;
-      await notificationService.markAllAsRead(userId);
+      const { sub: supabaseId } = req.user!;
+      // Get database user ID from supabaseId
+      const user = await userService.getUserBySupabaseId(supabaseId);
+      await notificationService.markAllAsRead(user.id);
       sendSuccess(res, null, "All notifications marked as read");
     } catch (error) {
       next(error);

@@ -168,6 +168,7 @@ model Project {
   teams       Team[]            @relation(fields: [teamIds], references: [id])
   events      CalendarEvent[]
   snapshots   ProjectSnapshot[]
+  customFields CustomField[]
 
   budget      Budget?
 
@@ -447,3 +448,31 @@ model ActivityLog {
 
   @@index([createdAt(sort: Desc)])
 }
+
+// ======================================================
+// 12. CUSTOM FIELDS
+// ======================================================
+
+model CustomField {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  type        String   // TEXT, NUMBER, DATE, SELECT
+  options     String[] // For SELECT type
+  projectId   String   @db.ObjectId
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  values      CustomFieldValue[]
+  createdAt   DateTime @default(now())
+}
+
+model CustomFieldValue {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  value         String
+  customFieldId String      @db.ObjectId
+  customField   CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+  taskId        String      @db.ObjectId
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([customFieldId, taskId])
+}
+

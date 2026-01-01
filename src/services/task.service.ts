@@ -2,6 +2,7 @@ import { AppError } from "../middlewares/error.middleware";
 
 import { TaskRepository } from "../repositories/task.repository";
 import { ProjectRepository } from "../repositories/project.repository";
+import { NotificationService } from "./notification.service";
 import {
   CreateTaskInput,
   UpdateTaskInput,
@@ -11,10 +12,12 @@ import {
 export class TaskService {
   private taskRepository: TaskRepository;
   private projectRepository: ProjectRepository;
+  private notificationService: NotificationService;
 
   constructor() {
     this.taskRepository = new TaskRepository();
     this.projectRepository = new ProjectRepository();
+    this.notificationService = new NotificationService();
   }
 
   async getUserTasks(userId: string) {
@@ -55,6 +58,29 @@ export class TaskService {
       targetProjectId,
       files
     );
+
+    // Send notifications to assignees (excluding the creator)
+    try {
+      const assigneeIds = data.assigneeIds || [];
+      const notificationPromises = assigneeIds
+        .filter((id) => id !== userId)
+        .map((assigneeId) =>
+          this.notificationService.createNotification({
+            type: "TASK_ASSIGNED",
+            title: "New Task Assigned",
+            message: `assigned you a new task: ${task.title}`,
+            userId: assigneeId,
+            projectId: targetProjectId,
+            taskId: task.id,
+            actorId: userId,
+          })
+        );
+
+      await Promise.all(notificationPromises);
+    } catch (error) {
+      console.error("Failed to send task assignment notifications:", error);
+      // Task still succeeds even if notifications fail
+    }
 
     return task;
   }

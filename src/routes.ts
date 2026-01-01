@@ -9,6 +9,7 @@ import notificationRoutes from "./routes/notification.routes";
 import commentRoutes from "./routes/comment.routes";
 import attachmentRoutes from "./routes/attachment.routes";
 import calendarRoutes from "./routes/calendar.routes";
+import customFieldRoutes from "./routes/customField.routes";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/notifications", notificationRoutes);
 router.use("/comments", commentRoutes);
 router.use("/attachments", attachmentRoutes);
 router.use("/calendar", calendarRoutes);
+router.use("/custom-fields", customFieldRoutes);
 
 export default router;

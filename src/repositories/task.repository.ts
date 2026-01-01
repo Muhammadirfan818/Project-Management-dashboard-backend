@@ -48,22 +48,17 @@ export class TaskRepository {
       },
     });
 
-    // 1. Collect all unique tag IDs from all tasks
     const allTagIds = Array.from(new Set(tasks.flatMap((task) => task.tagIds)));
 
-    // 2. Fetch all required tags in a single query
     const allTags = await prisma.tag.findMany({
       where: {
         id: { in: allTagIds },
       },
     });
 
-    // 3. Create a lookup map for faster access
     const tagMap = new Map(allTags.map((tag) => [tag.id, tag]));
 
-    // 4. Map the results
     return tasks.map((task) => {
-      // Resolve tags from map
       const tags = task.tagIds
         .map((tagId) => tagMap.get(tagId))
         .filter((tag) => tag !== undefined);
@@ -71,14 +66,9 @@ export class TaskRepository {
       return {
         ...task,
         tags,
-        // Map counts to the flat properties expected by frontend
         comments: task._count.comments,
         attachments: task._count.attachments,
         subtasks: task._count.subtasks,
-
-        // Remove _count from the final object if needed,
-        // though spreading task includes it.
-        // We explicitly overwrite the counting props.
       };
     });
   }
@@ -87,7 +77,6 @@ export class TaskRepository {
     const task = await prisma.task.findFirst({
       where: {
         id: taskId,
-        // Removed project ownership check to match global visibility
         isDeleted: false,
       },
       include: {
@@ -138,7 +127,6 @@ export class TaskRepository {
   }
 
   async findByIdAndProjectAccess(taskId: string, userId: string) {
-    // First check: find the task
     const task = await prisma.task.findFirst({
       where: {
         id: taskId,
@@ -158,7 +146,6 @@ export class TaskRepository {
 
     if (!task) return null;
 
-    // Check direct access
     const isOwner = task.project.ownerId === userId;
     const isDirectMember = task.project.memberIds.includes(userId);
     const isCreator = task.creatorId === userId;
@@ -168,7 +155,6 @@ export class TaskRepository {
       return task;
     }
 
-    // Check team-based access
     if (task.project.teamIds.length > 0) {
       const teamWithUser = await prisma.team.findFirst({
         where: {

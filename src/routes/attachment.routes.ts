@@ -7,7 +7,6 @@ const controller = new AttachmentController();
 
 router.use(authenticate);
 
-// Upload handled via frontend to Supabase
 router.post("/", controller.createAttachment);
 router.delete("/:id", controller.deleteAttachment);
 router.get("/task/:taskId", controller.getTaskAttachments);

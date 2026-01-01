@@ -1,7 +1,6 @@
 import { prisma } from "../config/prisma";
 
 export class CustomFieldRepository {
-  // Create a custom field for a project
   async create(data: {
     name: string;
     type: string;
@@ -18,7 +17,6 @@ export class CustomFieldRepository {
     });
   }
 
-  // Get all custom fields for a project
   async findByProjectId(projectId: string) {
     return prisma.customField.findMany({
       where: { projectId },
@@ -26,14 +24,12 @@ export class CustomFieldRepository {
     });
   }
 
-  // Get a custom field by ID
   async findById(id: string) {
     return prisma.customField.findUnique({
       where: { id },
     });
   }
 
-  // Update a custom field
   async update(id: string, data: { name?: string; options?: string[] }) {
     return prisma.customField.update({
       where: { id },
@@ -41,14 +37,12 @@ export class CustomFieldRepository {
     });
   }
 
-  // Delete a custom field
   async delete(id: string) {
     return prisma.customField.delete({
       where: { id },
     });
   }
 
-  // Upsert a custom field value for a task
   async upsertValue(customFieldId: string, taskId: string, value: string) {
     return prisma.customFieldValue.upsert({
       where: {
@@ -66,7 +60,6 @@ export class CustomFieldRepository {
     });
   }
 
-  // Get all custom field values for a task
   async findValuesByTaskId(taskId: string) {
     return prisma.customFieldValue.findMany({
       where: { taskId },
@@ -76,7 +69,6 @@ export class CustomFieldRepository {
     });
   }
 
-  // Delete a custom field value
   async deleteValue(customFieldId: string, taskId: string) {
     return prisma.customFieldValue.delete({
       where: {

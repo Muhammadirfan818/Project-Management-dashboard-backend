@@ -8,7 +8,6 @@ export class TeamService {
   }
 
   async createTeam(name: string, projectIds: string[], memberIds: string[]) {
-    // Validate inputs
     if (!name) {
       throw new Error("Team name is required");
     }
@@ -51,10 +50,6 @@ export class TeamService {
     return this.teamRepository.delete(id);
   }
 
-  /**
-   * Synchronize project-team bidirectional relationships.
-   * Finds all projects with teamIds and ensures those teams have the project in their projectIds.
-   */
   async syncProjectTeamRelationships() {
     return this.teamRepository.syncProjectTeamRelationships();
   }

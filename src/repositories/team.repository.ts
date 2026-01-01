@@ -10,7 +10,6 @@ export class TeamRepository {
   }) {
     const { name, projectIds, memberIds } = data;
 
-    // 1. Create the team
     const team = await prisma.team.create({
       data: {
         name,
@@ -23,8 +22,6 @@ export class TeamRepository {
       },
     });
 
-    // 2. Explicitly update the projects to include this team
-    // (Required because the relations are defined separately in the schema)
     if (projectIds.length > 0) {
       await Promise.all(
         projectIds.map((projectId) =>
@@ -104,7 +101,6 @@ export class TeamRepository {
               },
             },
             members: {
-              // Fetch project members for the UI
               select: {
                 id: true,
                 name: true,
@@ -119,7 +115,6 @@ export class TeamRepository {
       },
     });
 
-    // Transform and calculate task counts
     return teams.map((team) => ({
       ...team,
       projects: team.projects.map((project) => {
@@ -128,8 +123,6 @@ export class TeamRepository {
           (t) => t.status === TaskStatus.COMPLETED
         ).length;
 
-        // Remove the raw tasks array from the output if desired, or keep it.
-        // We'll return a clean object matching the expected specific structure + new fields
         const { tasks, ...projectData } = project;
         return {
           ...projectData,
@@ -175,15 +168,10 @@ export class TeamRepository {
     });
   }
 
-  /**
-   * Calculate team progress for a specific project
-   * Progress = average of task progress for tasks assigned to team members
-   */
   async calculateTeamProgressForProject(
     teamId: string,
     projectId: string
   ): Promise<number> {
-    // Get the team with its members
     const team = await prisma.team.findUnique({
       where: { id: teamId },
       select: { memberIds: true },
@@ -193,7 +181,6 @@ export class TeamRepository {
       return 0;
     }
 
-    // Get all tasks in the project that are not deleted
     const tasks = await prisma.task.findMany({
       where: {
         projectId,
@@ -205,13 +192,9 @@ export class TeamRepository {
       },
     });
 
-    // Calculate team progress using the utility
     return calculateTeamProgress(tasks, team.memberIds);
   }
 
-  /**
-   * Get teams for a project with calculated progress
-   */
   async findByProjectIdWithProgress(projectId: string) {
     const teams = await prisma.team.findMany({
       where: {
@@ -231,7 +214,6 @@ export class TeamRepository {
       },
     });
 
-    // Get all tasks for the project once (more efficient than querying per team)
     const tasks = await prisma.task.findMany({
       where: {
         projectId,
@@ -243,12 +225,11 @@ export class TeamRepository {
       },
     });
 
-    // Calculate progress for each team
     const teamsWithProgress = teams.map((team) => {
       const progress = calculateTeamProgress(tasks, team.memberIds);
       return {
         ...team,
-        progress, // Override the static progress with calculated value
+        progress,
       };
     });
 
@@ -256,7 +237,6 @@ export class TeamRepository {
   }
 
   async getTeamMemberStats(teamId: string) {
-    // 1. Get team with member IDs and project IDs
     const team = await prisma.team.findUnique({
       where: { id: teamId },
       select: {
@@ -267,7 +247,6 @@ export class TeamRepository {
 
     if (!team) return [];
 
-    // 2. Fetch all members details
     const members = await prisma.user.findMany({
       where: {
         id: { in: team.memberIds },
@@ -280,7 +259,6 @@ export class TeamRepository {
       },
     });
 
-    // 3. Get all completed tasks for these projects
     const completedTasks = await prisma.task.findMany({
       where: {
         projectId: { in: team.projectIds },
@@ -292,10 +270,8 @@ export class TeamRepository {
       },
     });
 
-    // 4. Calculate stats per member
     return members
       .map((member) => {
-        // Count how many completed tasks this member is assigned to
         const count = completedTasks.filter((task) =>
           task.assigneeIds.includes(member.id)
         ).length;
@@ -312,7 +288,6 @@ export class TeamRepository {
   }
 
   async getTeamOverviewStats(teamId: string, projectId?: string) {
-    // 1. Get team with project IDs
     const team = await prisma.team.findUnique({
       where: { id: teamId },
       select: {
@@ -329,15 +304,10 @@ export class TeamRepository {
       };
     }
 
-    // Determine the project filter
-    // If projectId is provided, use it (only if it belongs to the team)
-    // If not, use all projectIds from the team
     let projectFilter: string | string[] = team.projectIds;
     if (projectId && team.projectIds.includes(projectId)) {
       projectFilter = projectId;
     } else if (projectId) {
-      // If a specific project was requested but it's not in the team, return 0 stats
-      // Or we could ignore the filter. Returing 0 seems safer for data isolation.
       return {
         completedTasks: 0,
         incompletedTasks: 0,
@@ -346,7 +316,6 @@ export class TeamRepository {
       };
     }
 
-    // Helper to build the where clause
     const whereClause = {
       projectId: Array.isArray(projectFilter)
         ? { in: projectFilter }
@@ -357,21 +326,18 @@ export class TeamRepository {
     const now = new Date();
 
     const [completed, incompleted, overdue, income] = await Promise.all([
-      // Completed Tasks
       prisma.task.count({
         where: {
           ...whereClause,
           status: TaskStatus.COMPLETED,
         },
       }),
-      // Incompleted Tasks (Not Completed)
       prisma.task.count({
         where: {
           ...whereClause,
           status: { not: TaskStatus.COMPLETED },
         },
       }),
-      // Overdue Tasks
       prisma.task.count({
         where: {
           ...whereClause,
@@ -382,7 +348,6 @@ export class TeamRepository {
           },
         },
       }),
-      // Total Income (Sum of actualCost for Completed tasks)
       prisma.task.aggregate({
         where: {
           ...whereClause,
@@ -402,12 +367,7 @@ export class TeamRepository {
     };
   }
 
-  /**
-   * Synchronize project-team bidirectional relationships.
-   * Finds all projects with non-empty teamIds and ensures those teams have the project in their projectIds.
-   */
   async syncProjectTeamRelationships() {
-    // Find all projects that have teamIds
     const projects = await prisma.project.findMany({
       where: {
         teamIds: { isEmpty: false },
@@ -422,14 +382,12 @@ export class TeamRepository {
 
     for (const project of projects) {
       for (const teamId of project.teamIds) {
-        // Check if team exists and if projectId is already in team's projectIds
         const team = await prisma.team.findUnique({
           where: { id: teamId },
           select: { projectIds: true },
         });
 
         if (team && !team.projectIds.includes(project.id)) {
-          // Add project to tea
           await prisma.team.update({
             where: { id: teamId },
             data: {
@@ -450,7 +408,6 @@ export class TeamRepository {
   }
 
   async getTopEarningProjects(teamId: string, range: string = "this_month") {
-    // 1. Get team with project IDs
     const team = await prisma.team.findUnique({
       where: { id: teamId },
       select: { projectIds: true },
@@ -460,9 +417,8 @@ export class TeamRepository {
       return [];
     }
 
-    // 2. Determine Date Range
     const now = new Date();
-    let startDate = new Date(); // default to now
+    let startDate = new Date();
 
     if (range === "this_month") {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -471,11 +427,8 @@ export class TeamRepository {
     } else if (range === "this_year") {
       startDate = new Date(now.getFullYear(), 0, 1);
     } else {
-      // 'all_time' or unknown
-      startDate = new Date(0); // Beginning of time
+      startDate = new Date(0);
     }
-
-    // 3. Aggregate earnings per project
     const earnings = await prisma.task.groupBy({
       by: ["projectId"],
       where: {
@@ -492,15 +445,12 @@ export class TeamRepository {
       },
     });
 
-    // 4. Fetch Project Details (Name)
-    // We only need details for projects that have earnings
     const projectIdsWithEarnings = earnings.map((e) => e.projectId);
     const projects = await prisma.project.findMany({
       where: { id: { in: projectIdsWithEarnings } },
       select: { id: true, name: true },
     });
 
-    // 5. Enhance and Format Data
     const projectMap = new Map(projects.map((p) => [p.id, p]));
 
     const result = earnings.map((item) => {
@@ -510,12 +460,10 @@ export class TeamRepository {
         name: project ? project.name : "Unknown Project",
         completedTasks: item._count.id,
         earning: item._sum.actualCost || 0,
-        // Simple color assignment logic or could be stored in DB
         iconColor: "blue",
       };
     });
 
-    // 6. Sort by Earning Descending
     return result.sort((a, b) => b.earning - a.earning);
   }
 
@@ -553,7 +501,6 @@ export class TeamRepository {
       },
     });
 
-    // Initialize 12 months
     const monthlyData = Array(12)
       .fill(0)
       .map((_, i) => ({
@@ -563,7 +510,6 @@ export class TeamRepository {
         monthIndex: i,
       }));
 
-    // Aggregate
     tasks.forEach((task) => {
       const monthIndex = new Date(task.updatedAt).getMonth();
       const cost = task.actualCost || 0;

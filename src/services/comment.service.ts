@@ -20,7 +20,6 @@ export class CommentService {
       throw new Error("Comment content is required");
     }
 
-    // Resolve Supabase ID to Internal User ID
     const user = await this.userRepository.findUnique({
       supabaseId: data.authorId,
     });
@@ -40,12 +39,10 @@ export class CommentService {
   }
 
   async updateComment(id: string, content: string, userId: string) {
-    // TODO: Add authorization check
     return this.commentRepository.update(id, content);
   }
 
   async deleteComment(id: string, userId: string) {
-    // TODO: Add authorization check
     return this.commentRepository.delete(id);
   }
 }

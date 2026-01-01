@@ -42,7 +42,6 @@ export class TaskService {
   ) {
     const targetProjectId = data.projectId || projectId;
 
-    // Verify user has access to project
     const project = await this.projectRepository.findByIdAndUserId(
       targetProjectId,
       userId
@@ -59,7 +58,6 @@ export class TaskService {
       files
     );
 
-    // Send notifications to assignees (excluding the creator)
     try {
       const assigneeIds = data.assigneeIds || [];
       const notificationPromises = assigneeIds
@@ -79,14 +77,12 @@ export class TaskService {
       await Promise.all(notificationPromises);
     } catch (error) {
       console.error("Failed to send task assignment notifications:", error);
-      // Task still succeeds even if notifications fail
     }
 
     return task;
   }
 
   async updateTask(taskId: string, userId: string, data: UpdateTaskInput) {
-    // Verify access
     const task = await this.taskRepository.findByIdAndProjectAccess(
       taskId,
       userId
@@ -102,7 +98,6 @@ export class TaskService {
   }
 
   async deleteTask(taskId: string, userId: string) {
-    // Verify access
     const task = await this.taskRepository.findByIdAndProjectAccess(
       taskId,
       userId
@@ -112,14 +107,8 @@ export class TaskService {
       throw new AppError("Access denied to this task", 403);
     }
 
-    // Hard delete - removes task and cascades to delete:
-    // - attachments, comments, subtasks, time tracking, history
     const attachmentUrls = await this.taskRepository.hardDelete(taskId);
 
-    // Note: To also delete files from Supabase storage, you would need to:
-    // 1. Import supabase client in backend
-    // 2. Call: await supabase.storage.from('attachments').remove(attachmentUrls)
-    // For now, database records are cleaned up. Storage cleanup can be added later.
     console.log(
       `[TaskService] Deleted task ${taskId} with ${attachmentUrls.length} attachments`
     );

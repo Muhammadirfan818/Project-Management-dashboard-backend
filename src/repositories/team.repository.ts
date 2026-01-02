@@ -32,8 +32,8 @@ export class TeamRepository {
                 connect: { id: team.id },
               },
             },
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -120,7 +120,7 @@ export class TeamRepository {
       projects: team.projects.map((project) => {
         const totalTasks = project.tasks.length;
         const completedTasks = project.tasks.filter(
-          (t) => t.status === TaskStatus.COMPLETED
+          (t) => t.status === TaskStatus.COMPLETED,
         ).length;
 
         const { tasks, ...projectData } = project;
@@ -135,7 +135,7 @@ export class TeamRepository {
 
   async update(
     id: string,
-    data: { name?: string; memberIds?: string[]; projectIds?: string[] }
+    data: { name?: string; memberIds?: string[]; projectIds?: string[] },
   ) {
     const { name, memberIds, projectIds } = data;
     const updateData: {
@@ -170,7 +170,7 @@ export class TeamRepository {
 
   async calculateTeamProgressForProject(
     teamId: string,
-    projectId: string
+    projectId: string,
   ): Promise<number> {
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -273,7 +273,7 @@ export class TeamRepository {
     return members
       .map((member) => {
         const count = completedTasks.filter((task) =>
-          task.assigneeIds.includes(member.id)
+          task.assigneeIds.includes(member.id),
         ).length;
 
         return {

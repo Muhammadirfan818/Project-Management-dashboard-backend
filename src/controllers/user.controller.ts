@@ -17,7 +17,7 @@ export class UserController {
         currentUserId,
         req.user?.email || "",
         req.user?.name,
-        req.user?.avatar
+        req.user?.avatar,
       );
 
       sendSuccess(res, user);

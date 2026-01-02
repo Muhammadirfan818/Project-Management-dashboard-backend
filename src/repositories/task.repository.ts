@@ -175,7 +175,7 @@ export class TaskRepository {
     data: CreateTaskInput,
     creatorId: string,
     projectId: string,
-    files?: AttachmentMetadata[]
+    files?: AttachmentMetadata[],
   ) {
     const processedTagIds: string[] = [];
     if (data.tags && Array.isArray(data.tags)) {
@@ -257,7 +257,7 @@ export class TaskRepository {
     Object.keys(updateData).forEach(
       (key) =>
         updateData[key as keyof Prisma.TaskUpdateInput] === undefined &&
-        delete updateData[key as keyof Prisma.TaskUpdateInput]
+        delete updateData[key as keyof Prisma.TaskUpdateInput],
     );
 
     if (rest.assigneeIds) {
@@ -344,7 +344,7 @@ export class TaskRepository {
   async assignSubtask(
     subtaskId: string,
     assigneeId: string,
-    action: "add" | "remove"
+    action: "add" | "remove",
   ) {
     const subtask = await prisma.subTask.findUnique({
       where: { id: subtaskId },

@@ -13,7 +13,7 @@ export class UserService {
     supabaseId: string,
     email: string,
     name?: string,
-    avatar?: string
+    avatar?: string,
   ) {
     let user = await this.userRepository.findUnique({ supabaseId });
 
@@ -78,7 +78,7 @@ export class UserService {
       if (error) {
         console.error(
           `Failed to delete user ${supabaseId} from Supabase Auth:`,
-          error
+          error,
         );
       }
     }

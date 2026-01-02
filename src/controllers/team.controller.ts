@@ -91,7 +91,7 @@ export class TeamController {
       sendSuccess(
         res,
         result,
-        "Project-Team relationships synchronized successfully"
+        "Project-Team relationships synchronized successfully",
       );
     } catch (error) {
       next(error);
@@ -135,7 +135,7 @@ export class TeamController {
   async getYearlyIncomeOverview(
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) {
     try {
       const { id } = req.params;

@@ -73,7 +73,7 @@ export class CalendarRepository {
       start?: Date;
       end?: Date;
       description?: string;
-    }
+    },
   ) {
     return prisma.calendarEvent.update({
       where: { id },

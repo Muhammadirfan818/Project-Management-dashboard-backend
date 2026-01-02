@@ -33,7 +33,7 @@ export class CalendarService {
   async getEventsByDateRange(
     projectId: string,
     startDate: string,
-    endDate: string
+    endDate: string,
   ) {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -50,7 +50,7 @@ export class CalendarService {
     return this.calendarRepository.findTodayEvents(
       projectId,
       todayStart,
-      todayEnd
+      todayEnd,
     );
   }
 
@@ -66,7 +66,7 @@ export class CalendarService {
       start?: Date;
       end?: Date;
       description?: string;
-    }
+    },
   ) {
     return this.calendarRepository.update(id, data);
   }

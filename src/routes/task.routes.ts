@@ -16,17 +16,17 @@ router.post("/:id/subtasks", authMiddleware, taskController.addSubtask);
 router.delete(
   "/:id/subtasks/:subtaskId",
   authMiddleware,
-  taskController.deleteSubtask
+  taskController.deleteSubtask,
 );
 router.patch(
   "/:id/subtasks/:subtaskId/assign",
   authMiddleware,
-  taskController.assignSubtask
+  taskController.assignSubtask,
 );
 router.patch(
   "/:id/subtasks/:subtaskId/toggle",
   authMiddleware,
-  taskController.toggleSubtaskCompleted
+  taskController.toggleSubtaskCompleted,
 );
 
 export default router;

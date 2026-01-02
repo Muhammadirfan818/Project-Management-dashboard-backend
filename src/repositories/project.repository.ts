@@ -250,7 +250,7 @@ export class ProjectRepository {
 
   async enrichProjectsWithTeamProgress<
     TTeam extends { memberIds: string[]; progress?: number | null },
-    TProject extends { id: string; teams: TTeam[] }
+    TProject extends { id: string; teams: TTeam[] },
   >(projects: TProject[]): Promise<TProject[]> {
     const projectIds = projects.map((p) => p.id);
 

@@ -13,7 +13,7 @@ export class NotificationController {
       // Get database user ID from supabaseId
       const user = await userService.getUserBySupabaseId(supabaseId);
       const notifications = await notificationService.getUserNotifications(
-        user.id
+        user.id,
       );
       sendSuccess(res, notifications);
     } catch (error) {

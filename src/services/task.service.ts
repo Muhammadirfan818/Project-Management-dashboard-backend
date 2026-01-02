@@ -38,13 +38,13 @@ export class TaskService {
     data: CreateTaskInput,
     userId: string,
     projectId: string,
-    files?: AttachmentMetadata[]
+    files?: AttachmentMetadata[],
   ) {
     const targetProjectId = data.projectId || projectId;
 
     const project = await this.projectRepository.findByIdAndUserId(
       targetProjectId,
-      userId
+      userId,
     );
 
     if (!project) {
@@ -55,7 +55,7 @@ export class TaskService {
       data,
       userId,
       targetProjectId,
-      files
+      files,
     );
 
     try {
@@ -71,7 +71,7 @@ export class TaskService {
             projectId: targetProjectId,
             taskId: task.id,
             actorId: userId,
-          })
+          }),
         );
 
       await Promise.all(notificationPromises);
@@ -85,7 +85,7 @@ export class TaskService {
   async updateTask(taskId: string, userId: string, data: UpdateTaskInput) {
     const task = await this.taskRepository.findByIdAndProjectAccess(
       taskId,
-      userId
+      userId,
     );
 
     if (!task) {
@@ -100,7 +100,7 @@ export class TaskService {
   async deleteTask(taskId: string, userId: string) {
     const task = await this.taskRepository.findByIdAndProjectAccess(
       taskId,
-      userId
+      userId,
     );
 
     if (!task) {
@@ -110,14 +110,14 @@ export class TaskService {
     const attachmentUrls = await this.taskRepository.hardDelete(taskId);
 
     console.log(
-      `[TaskService] Deleted task ${taskId} with ${attachmentUrls.length} attachments`
+      `[TaskService] Deleted task ${taskId} with ${attachmentUrls.length} attachments`,
     );
   }
 
   async updateTaskStatus(taskId: string, userId: string, status: string) {
     const task = await this.taskRepository.findByIdAndProjectAccess(
       taskId,
-      userId
+      userId,
     );
     if (!task) {
       throw new AppError("Access denied to this task", 403);
@@ -128,7 +128,7 @@ export class TaskService {
   async addSubtask(taskId: string, userId: string, title: string) {
     const task = await this.taskRepository.findByIdAndProjectAccess(
       taskId,
-      userId
+      userId,
     );
     if (!task) {
       throw new AppError("Access denied to this task", 403);
@@ -140,7 +140,7 @@ export class TaskService {
   async deleteSubtask(taskId: string, subtaskId: string, userId: string) {
     const task = await this.taskRepository.findByIdAndProjectAccess(
       taskId,
-      userId
+      userId,
     );
     if (!task) {
       throw new AppError("Access denied to this task", 403);
@@ -154,11 +154,11 @@ export class TaskService {
     subtaskId: string,
     userId: string,
     assigneeId: string,
-    action: "add" | "remove"
+    action: "add" | "remove",
   ) {
     const task = await this.taskRepository.findByIdAndProjectAccess(
       taskId,
-      userId
+      userId,
     );
     if (!task) {
       throw new AppError("Access denied to this task", 403);
@@ -171,11 +171,11 @@ export class TaskService {
     taskId: string,
     subtaskId: string,
     userId: string,
-    completed: boolean
+    completed: boolean,
   ) {
     const task = await this.taskRepository.findByIdAndProjectAccess(
       taskId,
-      userId
+      userId,
     );
     if (!task) {
       throw new AppError("Access denied to this task", 403);

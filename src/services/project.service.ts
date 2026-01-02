@@ -26,7 +26,7 @@ export class ProjectService {
   async getProjectById(projectId: string, userId: string) {
     const project = await this.projectRepository.findByIdAndUserId(
       projectId,
-      userId
+      userId,
     );
 
     if (!project) {
@@ -46,7 +46,7 @@ export class ProjectService {
       const team = await this.teamService.createTeam(
         "Development",
         [project.id],
-        [ownerId]
+        [ownerId],
       );
 
       await this.projectRepository.update(project.id, {
@@ -59,11 +59,11 @@ export class ProjectService {
   async updateProject(
     projectId: string,
     userId: string,
-    data: UpdateProjectInput
+    data: UpdateProjectInput,
   ) {
     const project = await this.projectRepository.findByIdAndOwnerId(
       projectId,
-      userId
+      userId,
     );
 
     if (!project) {
@@ -78,7 +78,7 @@ export class ProjectService {
   async deleteProject(projectId: string, userId: string) {
     const project = await this.projectRepository.findByIdAndOwnerId(
       projectId,
-      userId
+      userId,
     );
 
     if (!project) {
@@ -91,7 +91,7 @@ export class ProjectService {
   async getAttachments(projectId: string, userId: string) {
     const project = await this.projectRepository.findByIdAndUserId(
       projectId,
-      userId
+      userId,
     );
 
     if (!project) {

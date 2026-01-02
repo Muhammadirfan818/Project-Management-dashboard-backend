@@ -16,7 +16,7 @@ export class CustomFieldService {
     const validTypes = ["TEXT", "NUMBER", "DATE", "SELECT"];
     if (!validTypes.includes(data.type)) {
       throw new Error(
-        `Invalid field type. Must be one of: ${validTypes.join(", ")}`
+        `Invalid field type. Must be one of: ${validTypes.join(", ")}`,
       );
     }
 

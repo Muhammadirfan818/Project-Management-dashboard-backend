@@ -3,7 +3,10 @@ import { Prisma } from "@prisma/client";
 import { logger } from "../config/logger";
 
 export class AppError extends Error {
-  constructor(public message: string, public statusCode: number) {
+  constructor(
+    public message: string,
+    public statusCode: number,
+  ) {
     super(message);
   }
 }
@@ -12,7 +15,7 @@ export function errorMiddleware(
   err: Error | AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   logger.error(err.message);
 

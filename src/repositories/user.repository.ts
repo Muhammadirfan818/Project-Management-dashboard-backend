@@ -3,7 +3,7 @@ import { CreateUserInput, UpdateUserInput } from "../types/user.types";
 
 export class UserRepository {
   async findUnique(
-    where: { id: string } | { email: string } | { supabaseId: string }
+    where: { id: string } | { email: string } | { supabaseId: string },
   ) {
     return prisma.user.findUnique({
       where,

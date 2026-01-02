@@ -5,7 +5,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn(
-    "Supabase URL or Service Role Key missing. Admin functions will fail."
+    "Supabase URL or Service Role Key missing. Admin functions will fail.",
   );
 }
 

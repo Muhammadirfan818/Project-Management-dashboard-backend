@@ -61,7 +61,7 @@ export class TaskController {
         data,
         user.id,
         data.projectId,
-        files
+        files,
       );
       sendSuccess(res, task, "Task created successfully", 201);
     } catch (error: unknown) {
@@ -144,14 +144,14 @@ export class TaskController {
         subtaskId,
         user.id,
         assigneeId,
-        action || "add"
+        action || "add",
       );
       sendSuccess(
         res,
         subtask,
         action === "remove"
           ? "Assignee removed from subtask"
-          : "Assignee added to subtask"
+          : "Assignee added to subtask",
       );
     } catch (error: unknown) {
       next(error);
@@ -161,7 +161,7 @@ export class TaskController {
   async toggleSubtaskCompleted(
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) {
     try {
       const { id: taskId, subtaskId } = req.params;
@@ -172,7 +172,7 @@ export class TaskController {
         taskId,
         subtaskId,
         user.id,
-        completed
+        completed,
       );
       sendSuccess(res, subtask, "Subtask updated successfully");
     } catch (error: unknown) {

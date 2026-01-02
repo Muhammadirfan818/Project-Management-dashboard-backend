@@ -93,7 +93,7 @@ export class ProjectController {
       const { sub: supabaseId } = req.user!;
       const user = await userService.getUserBySupabaseId(supabaseId);
       console.log(
-        `[ProjectController] Fetching attachments for project ${id} by user ${user.id}`
+        `[ProjectController] Fetching attachments for project ${id} by user ${user.id}`,
       );
 
       const attachments = await projectService.getAttachments(id, user.id);

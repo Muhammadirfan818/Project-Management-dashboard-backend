@@ -41,7 +41,7 @@ export class TeamService {
 
   async updateTeam(
     id: string,
-    data: { name?: string; memberIds?: string[]; projectIds?: string[] }
+    data: { name?: string; memberIds?: string[]; projectIds?: string[] },
   ) {
     return this.teamRepository.update(id, data);
   }

@@ -55,7 +55,7 @@ export class CalendarController {
       const events = await calendarService.getEventsByDateRange(
         projectId,
         startDate as string,
-        endDate as string
+        endDate as string,
       );
       sendSuccess(res, events);
     } catch (error) {

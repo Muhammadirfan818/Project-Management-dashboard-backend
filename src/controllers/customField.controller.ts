@@ -63,7 +63,7 @@ export class CustomFieldController {
       const fieldValue = await customFieldService.setFieldValue(
         fieldId,
         taskId,
-        value
+        value,
       );
       sendSuccess(res, fieldValue, "Field value saved successfully");
     } catch (error) {

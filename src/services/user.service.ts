@@ -52,6 +52,11 @@ export class UserService {
   async getAllUsers() {
     return this.userRepository.findAll();
   }
+
+  async findByEmail(email: string) {
+    return this.userRepository.findUnique({ email });
+  }
+
   async updateUser(supabaseId: string, data: UpdateUserInput) {
     const user = await this.userRepository.findUnique({ supabaseId });
     if (!user) {

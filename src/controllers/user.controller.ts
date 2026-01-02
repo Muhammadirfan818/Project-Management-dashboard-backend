@@ -64,4 +64,21 @@ export class UserController {
       next(error);
     }
   }
+
+  // Public method - no auth required
+  async checkEmailExists(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+
+      if (!email || typeof email !== "string") {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      const user = await userService.findByEmail(email);
+
+      res.json({ exists: !!user });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

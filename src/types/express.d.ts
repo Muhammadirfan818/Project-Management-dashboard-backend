@@ -11,7 +11,6 @@ declare global {
         avatar?: string;
         [key: string]: unknown;
       };
-      // Add Multer types
       files?: Express.Multer.File[];
       file?: Express.Multer.File;
     }

@@ -1,6 +1,5 @@
 import { Router } from "express";
 
-// Import all module routes
 import userRoutes from "./routes/user.routes";
 import projectRoutes from "./routes/project.routes";
 import taskRoutes from "./routes/task.routes";

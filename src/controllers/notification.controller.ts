@@ -10,10 +10,9 @@ export class NotificationController {
   async getUserNotifications(req: Request, res: Response, next: NextFunction) {
     try {
       const { sub: supabaseId } = req.user!;
-      // Get database user ID from supabaseId
       const user = await userService.getUserBySupabaseId(supabaseId);
       const notifications = await notificationService.getUserNotifications(
-        user.id,
+        user.id
       );
       sendSuccess(res, notifications);
     } catch (error) {
@@ -34,7 +33,6 @@ export class NotificationController {
   async markAllAsRead(req: Request, res: Response, next: NextFunction) {
     try {
       const { sub: supabaseId } = req.user!;
-      // Get database user ID from supabaseId
       const user = await userService.getUserBySupabaseId(supabaseId);
       await notificationService.markAllAsRead(user.id);
       sendSuccess(res, null, "All notifications marked as read");

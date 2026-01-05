@@ -6,8 +6,8 @@ export interface CreateTaskInput {
   projectId: string;
   priority?: Priority;
   status?: TaskStatus;
-  dueDate?: string; // Changed from Date to string
-  assigneeIds?: string[]; // Added this line
+  dueDate?: string;
+  assigneeIds?: string[];
   estimatedHours?: number;
   estimatedCost?: number;
   actualCost?: number;

@@ -5,7 +5,6 @@ import { sendSuccess } from "../utils/response";
 const customFieldService = new CustomFieldService();
 
 export class CustomFieldController {
-  // Create a custom field for a project
   async createField(req: Request, res: Response, next: NextFunction) {
     try {
       const { name, type, options, projectId } = req.body;
@@ -21,7 +20,6 @@ export class CustomFieldController {
     }
   }
 
-  // Get all custom fields for a project
   async getProjectFields(req: Request, res: Response, next: NextFunction) {
     try {
       const { projectId } = req.params;
@@ -32,7 +30,6 @@ export class CustomFieldController {
     }
   }
 
-  // Update a custom field
   async updateField(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
@@ -44,7 +41,6 @@ export class CustomFieldController {
     }
   }
 
-  // Delete a custom field
   async deleteField(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
@@ -55,7 +51,6 @@ export class CustomFieldController {
     }
   }
 
-  // Set a custom field value for a task
   async setFieldValue(req: Request, res: Response, next: NextFunction) {
     try {
       const { fieldId, taskId } = req.params;
@@ -63,7 +58,7 @@ export class CustomFieldController {
       const fieldValue = await customFieldService.setFieldValue(
         fieldId,
         taskId,
-        value,
+        value
       );
       sendSuccess(res, fieldValue, "Field value saved successfully");
     } catch (error) {
@@ -71,7 +66,6 @@ export class CustomFieldController {
     }
   }
 
-  // Get all custom field values for a task
   async getTaskFieldValues(req: Request, res: Response, next: NextFunction) {
     try {
       const { taskId } = req.params;
@@ -82,7 +76,6 @@ export class CustomFieldController {
     }
   }
 
-  // Clear a custom field value for a task
   async clearFieldValue(req: Request, res: Response, next: NextFunction) {
     try {
       const { fieldId, taskId } = req.params;

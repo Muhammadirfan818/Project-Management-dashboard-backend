@@ -68,16 +68,13 @@ export class UserService {
   async deleteUser(supabaseId: string) {
     const { supabaseAdmin } = await import("../lib/supabase");
 
-    // Check if user exists first
     const user = await this.userRepository.findUnique({ supabaseId });
     if (!user) {
       throw new AppError("User not found", 404);
     }
 
-    // Always delete from local DB
     await this.userRepository.delete(supabaseId);
 
-    // Try to delete from Supabase Auth if admin client is available
     if (supabaseAdmin) {
       const { error } = await supabaseAdmin.auth.admin.deleteUser(supabaseId);
       if (error) {

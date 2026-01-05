@@ -5,10 +5,8 @@ import { authMiddleware as authenticate } from "../middlewares/auth.middleware";
 const router = Router();
 const controller = new UserController();
 
-// Public route - no auth required (for password reset flow)
 router.post("/check-email", controller.checkEmailExists.bind(controller));
 
-// Protected routes
 router.use(authenticate);
 
 router.post("/profile", controller.getProfile.bind(controller));

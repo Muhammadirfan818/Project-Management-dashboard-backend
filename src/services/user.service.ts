@@ -13,7 +13,7 @@ export class UserService {
     supabaseId: string,
     email: string,
     name?: string,
-    avatar?: string,
+    avatar?: string
   ) {
     let user = await this.userRepository.findUnique({ supabaseId });
 
@@ -66,21 +66,28 @@ export class UserService {
   }
 
   async deleteUser(supabaseId: string) {
+    const { supabaseAdmin } = await import("../lib/supabase");
+
+    // Check if user exists first
     const user = await this.userRepository.findUnique({ supabaseId });
     if (!user) {
       throw new AppError("User not found", 404);
     }
+
+    // Always delete from local DB
     await this.userRepository.delete(supabaseId);
 
-    const { supabaseAdmin } = await import("../lib/supabase");
+    // Try to delete from Supabase Auth if admin client is available
     if (supabaseAdmin) {
       const { error } = await supabaseAdmin.auth.admin.deleteUser(supabaseId);
       if (error) {
         console.error(
           `Failed to delete user ${supabaseId} from Supabase Auth:`,
-          error,
+          error
         );
       }
+    } else {
+      console.warn("Supabase Admin not configured. Skipping Auth deletion.");
     }
   }
 }

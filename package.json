@@ -28,7 +28,9 @@
     "jwks-rsa": "^3.2.0",
     "multer": "^2.0.2",
     "winston": "^3.19.0",
-    "zod": "^4.2.1"
+    "zod": "^4.2.1",
+    "prisma": "^5.22.0",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/chai": "^5.2.3",
@@ -43,10 +45,8 @@
     "chai": "^6.2.2",
     "cross-env": "^10.1.0",
     "mocha": "^11.7.5",
-    "prisma": "^5.22.0",
     "sinon": "^21.0.1",
     "supertest": "^7.1.4",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "tsx": "^4.21.0"
   }
 }

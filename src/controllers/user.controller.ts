@@ -17,7 +17,7 @@ export class UserController {
         currentUserId,
         req.user?.email || "",
         req.user?.name,
-        req.user?.avatar,
+        req.user?.avatar
       );
 
       sendSuccess(res, user);
@@ -65,7 +65,6 @@ export class UserController {
     }
   }
 
-  // Public method - no auth required
   async checkEmailExists(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;

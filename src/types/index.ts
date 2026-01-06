@@ -11,3 +11,7 @@ export interface PaginationParams {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }
+
+export * from "./user.types";
+export * from "./task.types";
+export * from "./project.types";

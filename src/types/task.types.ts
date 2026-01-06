@@ -32,3 +32,8 @@ export interface AttachmentMetadata {
   size: number;
   mimeType: string;
 }
+
+export interface TaskForProgress {
+  status: TaskStatus | string;
+  assigneeIds: string[];
+}

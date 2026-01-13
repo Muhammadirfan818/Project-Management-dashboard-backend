@@ -1,0 +1,478 @@
+// ======================================================
+// Prisma + MongoDB − Unified Final Schema (2025)
+// Target: MongoDB (Prisma + @db.ObjectId)
+// ======================================================
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["mongoDb"]
+}
+
+// ======================================================
+// ENUMS
+// ======================================================
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+  GUEST
+}
+
+enum SpecificRole {
+  DEVELOPER
+  DESIGNER
+  QA
+  PRODUCT_MANAGER
+  DEVOPS
+  SUPPORT
+  MARKETING
+  OTHER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+  CANCELED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  QA
+  COMPLETED
+  CANCELED
+  POSTPONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum EventType {
+  MEETING
+  DEADLINE
+  EVENT
+  HOLIDAY
+  REMINDER
+}
+
+// ======================================================
+// 1. USER + SETTINGS
+// ======================================================
+
+model User {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  supabaseId    String         @unique
+  email         String         @unique
+  name          String?
+  avatar        String?        @default("https://avatar.vercel.sh/default.png")
+  role          Role           @default(MEMBER)
+  specificRole  SpecificRole?
+  jobTitle      String?
+  department    String?
+  profileBio    String?
+  isActive      Boolean        @default(true)
+  hasCompletedOnboarding Boolean @default(false)
+
+  settings      UserSettings?
+
+  // Relations
+  ownedProjects Project[]      @relation("ProjectOwner")
+  projectIds    String[]       @db.ObjectId
+  projects      Project[]      @relation("ProjectMembers", fields: [projectIds], references: [id])
+  teamIds       String[]       @db.ObjectId
+  teams         Team[]         @relation("TeamMembers", fields: [teamIds], references: [id])
+
+  assignedTaskIds String[]     @db.ObjectId
+  assignedTasks   Task[]       @relation("TaskAssignees", fields: [assignedTaskIds], references: [id])
+  createdTasks    Task[]       @relation("TaskCreator")
+  attachments     Attachment[]
+
+  comments      Comment[]
+  timeTracks    TimeTracking[]
+  notifications Notification[]
+  notificationsAsActor Notification[] @relation("Actor")
+  searchHistory SearchHistory[]
+  activities    ActivityLog[]
+  taskHistories TaskHistory[]  @relation("TaskHistoryChanger")
+
+  // Subtask relations
+  createdSubtasks     SubTask[]  @relation("SubTaskCreator")
+  assignedSubtaskIds  String[]   @db.ObjectId
+  assignedSubtasks    SubTask[]  @relation("SubTaskAssignees", fields: [assignedSubtaskIds], references: [id])
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model UserSettings {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @unique @db.ObjectId
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  theme             String   @default("system")     // "light" | "dark" | "system"
+  language          String   @default("en")
+  timezone          String   @default("Asia/Karachi")
+  dateFormat        String   @default("DD/MM/YYYY")
+  timeFormat        String   @default("24h")
+
+  // Notification preferences
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
+  activityUpdates    Boolean @default(true)
+  mentions           Boolean @default(true)
+  taskAssignments    Boolean @default(true)
+  dailyDigest        Boolean @default(false)
+
+  @@map("user_settings")
+}
+
+// ======================================================
+// 2. PROJECT + BUDGET + SNAPSHOTS
+// ======================================================
+
+model Project {
+  id          String            @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  key         String            @unique
+  description String?
+  icon        String?           @default("briefcase")
+  color       String?           @default("blue")
+
+  startDate   DateTime?
+  endDate     DateTime?
+  progress    Float             @default(0)
+  status      ProjectStatus     @default(ACTIVE)
+  priority    Priority          @default(MEDIUM)
+
+  ownerId     String            @db.ObjectId
+  owner       User              @relation("ProjectOwner", fields: [ownerId], references: [id])
+
+  memberIds   String[]          @db.ObjectId
+  members     User[]            @relation("ProjectMembers", fields: [memberIds], references: [id])
+  tasks       Task[]
+  teamIds     String[]          @db.ObjectId
+  teams       Team[]            @relation(fields: [teamIds], references: [id])
+  events      CalendarEvent[]
+  snapshots   ProjectSnapshot[]
+  customFields CustomField[]
+
+  budget      Budget?
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Budget {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId    String   @unique @db.ObjectId
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  totalBudget  Float    @default(900)  // default project seed
+  spent        Float    @default(0)
+  currency     String   @default("USD")
+  isBillable   Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ProjectSnapshot {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId    String   @db.ObjectId
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  totalTasks   Int      @default(0)
+  completed    Int      @default(0)
+  inProgress   Int      @default(0)
+  backlog      Int      @default(0)
+  qa           Int      @default(0)
+  delayed      Int      @default(0)
+
+  date         DateTime @default(now())
+
+  @@unique([projectId, date])
+  @@map("project_snapshots")
+}
+
+// ======================================================
+// 3. TASK SYSTEM (Tasks, costs, subtasks, history)
+// ======================================================
+
+model Task {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  title          String
+  description    String?
+  status         TaskStatus  @default(BACKLOG)
+  priority       Priority    @default(MEDIUM)
+
+  startDate      DateTime?
+  dueDate        DateTime?
+
+  projectId      String      @db.ObjectId
+  project        Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  assigneeIds    String[]    @db.ObjectId
+  assignees      User[]      @relation("TaskAssignees", fields: [assigneeIds], references: [id])
+
+  creatorId      String      @db.ObjectId
+  creator        User        @relation("TaskCreator", fields: [creatorId], references: [id])
+
+  // Cost & estimation fields
+  estimatedHours Float       @default(0)
+  estimatedCost  Float       @default(0)
+  actualHours    Float       @default(0)
+  actualCost     Float       @default(0)
+
+  isDeleted      Boolean     @default(false)
+
+  // Relations
+  subtasks       SubTask[]
+  comments       Comment[]
+  attachments    Attachment[]
+  timeTracks     TimeTracking[]
+  tagIds         String[]    @db.ObjectId
+  labelIds       String[]    @db.ObjectId
+  history        TaskHistory[]
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// Subtask as separate small unit
+model SubTask {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  completed   Boolean  @default(false)
+  taskId      String   @db.ObjectId
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdById String   @db.ObjectId
+  createdBy   User     @relation("SubTaskCreator", fields: [createdById], references: [id])
+  assigneeIds String[] @db.ObjectId
+  assignees   User[]   @relation("SubTaskAssignees", fields: [assigneeIds], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+// Task history log (status changes)
+model TaskHistory {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  from        TaskStatus
+  to          TaskStatus
+  taskId      String     @db.ObjectId
+  task        Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  changedById String     @db.ObjectId
+  changedBy   User       @relation("TaskHistoryChanger", fields: [changedById], references: [id])
+  changedAt   DateTime   @default(now())
+}
+
+// ======================================================
+// 4. COLLABORATION: Comments, Attachments
+// ======================================================
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  taskId    String   @db.ObjectId
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String   @db.ObjectId
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId, createdAt(sort: Desc)])
+}
+
+model Attachment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  url       String
+  size      Int?
+  mimeType  String?
+  createdAt DateTime @default(now())
+
+  taskId    String   @db.ObjectId
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String?  @db.ObjectId
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+// ======================================================
+// 5. TIME TRACKING
+// ======================================================
+
+model TimeTracking {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  taskId    String   @db.ObjectId
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+
+  hours     Float
+  date      DateTime
+  note      String?
+
+  createdAt DateTime @default(now())
+}
+
+// ======================================================
+// 6. NOTIFICATIONS
+// ======================================================
+
+model Notification {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  type       String
+  title      String
+  message    String
+  isRead     Boolean   @default(false)
+
+  userId     String    @db.ObjectId
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projectId  String?   @db.ObjectId
+  taskId     String?   @db.ObjectId
+
+  actorId    String?   @db.ObjectId
+  actor      User?     @relation("Actor", fields: [actorId], references: [id])
+
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, isRead])
+}
+
+// ======================================================
+// 7. SEARCH HISTORY
+// ======================================================
+
+model SearchHistory {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  query      String
+  type       String
+  title      String
+  subtitle   String?
+  url        String?
+  avatar     String?
+
+  userId     String   @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  searchedAt DateTime @default(now())
+
+  @@index([userId, searchedAt(sort: Desc)])
+}
+
+// ======================================================
+// 8. TEAM
+// ======================================================
+
+model Team {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  projectIds String[] @db.ObjectId
+  projects   Project[] @relation(fields: [projectIds], references: [id])
+  memberIds String[] @db.ObjectId
+  members   User[]   @relation("TeamMembers", fields: [memberIds], references: [id])
+  status      String?        @default("On track") // On track, At risk, On hold
+  priority    String?        @default("Medium") // High, Medium, Low
+  startDate   DateTime?
+  endDate     DateTime?
+  progress    Int?           @default(0)
+  createdAt DateTime @default(now())
+}
+
+// ======================================================
+// 9. CALENDAR EVENTS
+// ======================================================
+
+model CalendarEvent {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  type        EventType
+  start       DateTime
+  end         DateTime?
+  description String?
+  projectId   String?    @db.ObjectId
+  project     Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+}
+
+// ======================================================
+// 10. TAGS & LABELS (used by Task)
+// Many-to-many-like relations via arrays (Prisma + MongoDB)
+model Tag {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  text      String
+  color     String?
+  bg        String?
+}
+
+model Label {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  text      String
+  color     String?
+  bg        String?
+}
+
+// ======================================================
+// 11. ACTIVITY / AUDIT LOG
+// ======================================================
+
+model ActivityLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  action    String
+  message   String
+  metadata  Json?
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+}
+
+// ======================================================
+// 12. CUSTOM FIELDS
+// ======================================================
+
+model CustomField {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  type        String   // TEXT, NUMBER, DATE, SELECT
+  options     String[] // For SELECT type
+  projectId   String   @db.ObjectId
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  values      CustomFieldValue[]
+  createdAt   DateTime @default(now())
+}
+
+model CustomFieldValue {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  value         String
+  customFieldId String      @db.ObjectId
+  customField   CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+  taskId        String      @db.ObjectId
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([customFieldId, taskId])
+}
+

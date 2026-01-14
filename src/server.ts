@@ -5,7 +5,7 @@ import { logger } from "./config/logger";
 
 const PORT = env.PORT;
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   logger.info(`Server running on port ${PORT}`);
   logger.info(`Environment: ${env.NODE_ENV}`);
   logger.info(`Health check: http://localhost:${PORT}/health`);
